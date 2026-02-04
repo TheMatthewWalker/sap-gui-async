@@ -1,0 +1,1 @@
+C:\Development\git-projects\sap-gui-async\costing-tool.csproj;x86

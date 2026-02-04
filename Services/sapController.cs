@@ -1,0 +1,631 @@
+using costing_tool;
+using costing_tool.pages;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using SAPFunctionsOCX;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
+using System.Numerics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.XPath;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+public class SapController
+{
+
+    /* Moved into SAP worker
+    dynamic sapFuncs = App.SapFuncs;
+
+    public IFunction CreateFunction(string name)
+    {
+        IFunction func = (IFunction)sapFuncs.Add(name);
+        return func;
+    */
+
+    /* OBSOLETE Login function
+    public bool Login(string system, string client, string systemId, string user, string password)
+    {
+        try
+        {
+            dynamic sapFuncs = App.SapFuncs;
+            dynamic conn = sapFuncs.Connection;
+
+                    conn.System = system;
+                    conn.Client = client;
+                    conn.SystemID = systemId;
+                    conn.User = user;
+                    conn.Password = password;
+                    return conn.Logon(0, true);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Login failed: {ex.Message}", ex);
+        }
+    }
+    */
+
+    public Task<bool> Login(
+                            string system,
+                            string client,
+                            string systemId,
+                            string user,
+                            string password)
+    {
+        return App.SapWorker.InvokeAsync(sap =>
+        {
+            dynamic conn = sap.Connection;
+            conn.System = system;
+            conn.Client = client;
+            conn.SystemID = systemId;
+            conn.User = user;
+            conn.Password = password;
+            return (bool)conn.Logon(0, true);
+        });
+    }
+
+    /* function to create TO, needs updating to work on the new thread
+    public TOCreateResult CreateTransferOrder(string plant, string sloc, string warehouse, string binType, string bin, string material, string batch, float qty, string destBin, string destBinType, string category, string special, string specialNumber)
+    {
+        try
+        {
+            dynamic func = sapFuncs.Add("L_TO_CREATE_SINGLE");
+
+            if (func == null)
+            {
+                return new TOCreateResult
+                {
+                    TransferOrderNumber = "",
+                    Message = "",
+                    Error = "Function module not found"
+                };
+            }
+
+            // Set the import parameters for the function module
+            func.Exports("I_LGNUM").Value = warehouse;         // Warehouse number
+            func.Exports("I_WERKS").Value = plant;             // Plant
+            func.Exports("I_LGORT").Value = sloc;              // Storage Location
+            func.Exports("I_SQUIT").Value = "X";              // Immediate Confirmation
+
+            func.Exports("I_BWLVS").Value = "999";         // Movement Type
+
+            func.Exports("I_MATNR").Value = material;          // Material
+            func.Exports("I_ANFME").Value = qty;               // Quantity
+            func.Exports("I_CHARG").Value = batch ?? "";       // Batch number
+            func.Exports("I_ZEUGN").Value = batch ?? "";       // Certificate number
+
+            func.Exports("I_VLTYP").Value = binType;         // Storage bin type
+            func.Exports("I_VLPLA").Value = bin;             // Storage bin
+
+            func.Exports("I_BESTQ").Value = category ?? "";        // Stock Category (Blocked / Quality)
+            func.Exports("I_SOBKZ").Value = special ?? "";         // Special Stock Indicator
+            func.Exports("I_SONUM").Value = specialNumber ?? "";   // Special Stock Number
+
+            func.Exports("I_NLPLA").Value = destBin;         // Destination bin
+            func.Exports("I_NLTYP").Value = destBinType;     // Destination bin type
+
+            // Execute BAPI
+            bool success = func.Call;
+            if (!success)
+                return new TOCreateResult
+                {
+                    TransferOrderNumber = "",
+                    Message = "",
+                    Error = Convert.ToString(func.Exception)
+                };
+
+            // Read return messages
+            var returnTable = func.Tables.Item("RETURN");
+            string messages = "";
+            string errorMsg = null;
+
+            if (returnTable != null)
+            {
+                int rc = 0;
+                try { rc = (int)returnTable.Rows.Count; } catch { rc = 0; }
+
+                for (int i = 1; i <= rc; i++)
+                {
+                    var row = returnTable.Rows.Item(i);
+                    string type = Convert.ToString(row["TYPE"] ?? "");
+                    string msg = Convert.ToString(row["MESSAGE"] ?? "");
+                    messages += $"{type}: {msg}\n";
+                    if (type == "E" || type == "A")
+                        errorMsg = msg;
+                }
+            }
+
+            // Transfer Order number (if created)
+            string toNumber = Convert.ToString(func.Imports.Item("E_TANUM").Value);
+
+            if (errorMsg == "RFC_COMMUNICATION_ERROR" || errorMsg == "INVALID_RFC_HANDLE")
+            {
+                Login("KAP", "100", "01", App.CurrentUser, App.CurrentPass);
+                errorMsg = "Connection Issue // System Re-connecting // Please Try Again";
+            }
+
+            return new TOCreateResult
+            {
+                TransferOrderNumber = toNumber,
+                Message = messages.Trim(),
+                Error = errorMsg
+            };
+
+        }
+        catch (System.Runtime.InteropServices.COMException comEx)
+        {
+            // This is the error you reported
+            System.Diagnostics.Debug.WriteLine($"COMException: {comEx.Message}");
+            System.Diagnostics.Debug.WriteLine($"COMException: {comEx.ErrorCode}");
+            throw new Exception(
+                "COM failed:\n" +
+                $"Message: {comEx.Message}\n" +
+                $"Error: {comEx.ErrorCode}\n",
+                comEx
+            );
+        }
+        catch (Exception ex)
+        {
+            string inner = ex.InnerException?.Message ?? "null";
+            string trace = ex.StackTrace ?? "null";
+
+            throw new Exception(
+                "LT01 failed:\n" +
+                $"Message: {ex.Message}\n" +
+                $"Inner: {inner}\n" +
+                $"StackTrace: {trace}\n",
+                ex
+            );
+        }
+    }
+    */
+
+    public List<TableCOST> CostSheet(string[][] materialFilters, SAPFunctions sapFuncs)
+    {
+        var result = new List<TableCOST>();
+
+
+        // Initialize SAP Functions
+        // ==========================
+        // dynamic sapFuncs = App.SapFuncs;
+        // dynamic conn = sapFuncs.Connection;
+        // This is done in seperate STA thread now added as argument
+
+        dynamic func = sapFuncs.Add("ZRFC_READ_TABLES");
+        if (func == null)
+            throw new Exception("Failed to add ZRFC_READ_TABLES function.");
+
+
+        // Define parameters
+        // ======================
+        //int rowCount = 1000;
+        string delimiter = ";";
+
+        //func.exports("ROWCOUNT").Value = rowCount;
+        func.exports("DELIMITER").Value = delimiter;
+        func.exports("NO_DATA").Value = " ";
+
+        var qt = func.Tables("QUERY_TABLES"); qt.Freetable();
+        var qf = func.Tables.Item("query_FIELDS"); qf.Freetable();
+        var jf = func.Tables.Item("join_FIELDS"); jf.Freetable();
+        var wc = func.Tables.Item("where_clause"); wc.Freetable();
+        var op = func.Tables.Item("value_list"); op.Freetable();
+
+
+        // Set table parameters
+        // ======================
+        string[] tablesToRead = new[] { 
+                                        "ZCOST_INFO3", 
+                                        "PATN",
+                                        "ZCOST_SHEET" 
+                                      };
+
+        foreach (var name in tablesToRead)
+        {
+            var row = qt.Rows.Add();
+            row["TABNAME"] = name;
+        }
+
+
+        // Set query fields
+        // ==================
+        string[][] fieldsToRead = [ 
+                                    ["ZCOST_INFO3","MATNR"],
+                                    ["ZCOST_INFO3","WERKS"],
+                                    ["ZCOST_INFO3","KADAT"],
+                                    ["ZCOST_INFO3","BIDAT"],
+                                    ["ZCOST_INFO3","PRCTR"],
+                                    ["ZCOST_INFO3", "BUKRS"],
+                                    ["ZCOST_INFO3", "PATNR"],
+                                    ["ZCOST_INFO3", "KST001"],
+                                    ["ZCOST_INFO3", "KST008"],
+                                    ["ZCOST_INFO3", "KST017"],
+                                    ["ZCOST_INFO3", "KST002"],
+                                    ["ZCOST_INFO3", "KST004"],
+                                    ["ZCOST_INFO3", "KST019"],
+                                    ["ZCOST_INFO3", "KST006"],
+                                    ["ZCOST_INFO3", "KST033"],
+                                    ["ZCOST_INFO3", "LOSGR"],
+                                    ["ZCOST_INFO3", "MEINS"],
+                                    ["ZCOST_INFO3", "FEH_STA"],
+                                    ["PATN", "WERK"],
+                                    ["ZCOST_SHEET", "VALID_FROM"],
+                                    ["ZCOST_SHEET", "VALID_TO"],
+                                    ["ZCOST_SHEET", "OH_PCT"],
+                                    ["ZCOST_SHEET", "IC_MARK_UP"]   
+                                  ];
+        
+        foreach (var name in fieldsToRead)
+        {
+            var row = qf.Rows.Add();
+            row["TABNAME"] = name[0];
+            row["FIELDNAME"] = name[1];
+        }
+
+
+        // Set join fields
+        // ==================
+        string[][] joinFields = [ 
+                                    [ "ZCOST_INFO3", "PATNR", "PATN", "PATNR" ],
+                                    [ "PATN", "WERK", "ZCOST_SHEET", "WERKS" ]    
+                                ];
+
+        foreach (var name in joinFields)
+        {
+            var row = jf.Rows.Add();
+            row["TAB_FROM"] = name[0];
+            row["FLD_FROM"] = name[1];
+            row["TAB_TO"] = name[2];
+            row["FLD_TO"] = name[3];
+        }
+
+
+        // Set where clause
+        // ==================
+        string[][] whereFields = [  
+                                    ["ZCOST_INFO3", "WERKS", "EQ '3012'"], 
+                                    ["ZCOST_INFO3", "FEH_STA", "EQ 'FR'"],
+                                    ["ZCOST_INFO3", "MATNR", "IN opt"],
+                                    ["ZCOST_INFO3", "KADAT", "EQ '01.01.2026'"],
+                                    //["ZCOST_INFO3", "BIDAT", $"EQ '{GetEndOfCurrentMonth()}'"]
+                                 ];
+
+        foreach (var name in whereFields)
+        {
+            var row = wc.Rows.Add();
+            row["TEXT"] = name[0] + "~" + name[1] + " " + name[2];
+        }
+
+
+        // Set option text
+        // ==================
+        foreach (var name in materialFilters)
+        {
+            var row = op.Rows.Add();
+            row["TABNAME"] = "ZCOST_INFO3";
+            row["FIELDNAME"] = "MATNR";
+            row["SIGN"] = "I";
+            row["OPTION"] = "";
+            row["LOW"] = SapN2C(name[0],18);
+            row["HIGH"] = "";
+        }
+
+
+        // Create objects to debug sap function data
+        // ====================================
+        object[,] qtdata = qt.Data;
+        object[,] qfdata = qf.Data;
+        object[,] jfdata = jf.Data;
+        object[,] wcdata = wc.Data;
+        object[,] opdata = op.Data;
+
+
+        // Call the function
+        // ==================
+        bool sapExec;
+        try
+        {
+            sapExec = func.Call;
+        }
+        catch (COMException ex)
+        {
+            throw new Exception($"SAP call failed (HRESULT {ex.ErrorCode})", ex);
+        }
+
+        if (!sapExec)
+            throw new Exception("SAP RFC_READ_TABLE call failed.");
+
+
+        // Process returned data
+        var dataTable = func.tables.Item("data_display");
+        object[,] data = dataTable.Data;
+        int header = 0;
+
+        foreach (var dataRow in dataTable.Rows)
+        {
+            header += 1;
+            if (header == 1) 
+                continue;
+
+            string rowStr = Convert.ToString(dataRow["WA"]) ?? string.Empty;
+            var cols = rowStr.Split(delimiter);
+
+            if (!(cols.ElementAtOrDefault(18)?.Trim() == "3012"))
+                continue;
+
+            var record = new TableCOST
+            {
+                Material = long.TryParse(cols.ElementAtOrDefault(0)?.Trim(), out _)
+                    ? cols.ElementAtOrDefault(0)?.Trim().TrimStart('0') ?? ""
+                    : cols.ElementAtOrDefault(0)?.Trim() ?? "",
+                //WERKS = cols.ElementAtOrDefault(1)?.Trim() ?? "",
+                CostingDate = cols.ElementAtOrDefault(2)?.Trim() ?? "",
+                //BIDAT = cols.ElementAtOrDefault(3)?.Trim() ?? "",
+                ProfitCenter = cols.ElementAtOrDefault(4)?.Trim() ?? "",
+                //BUKRS = cols.ElementAtOrDefault(5)?.Trim() ?? "",
+                //PATNR = cols.ElementAtOrDefault(6)?.Trim() ?? "",
+                DirectMaterial = decimal.TryParse(cols.ElementAtOrDefault(7)?.Trim(), out decimal kst001Val) ? Math.Round(kst001Val / 1000,2 ) : 0m,
+                DirectLabour = decimal.TryParse(cols.ElementAtOrDefault(8)?.Trim(), out decimal kst008Val) ? Math.Round(kst008Val / 1000, 2) : 0m,
+                VariableProductionCost = decimal.TryParse(cols.ElementAtOrDefault(9)?.Trim(), out decimal kst017Val) ? Math.Round(kst017Val / 1000, 2) : 0m,
+                InboundFreight = decimal.TryParse(cols.ElementAtOrDefault(10)?.Trim(), out decimal kst002Val) ? Math.Round(kst002Val / 1000, 2) : 0m,
+                OutboundFreight = decimal.TryParse(cols.ElementAtOrDefault(11)?.Trim(), out decimal kst004Val) ? Math.Round(kst004Val / 1000, 2) : 0m,
+                Scrap = decimal.TryParse(cols.ElementAtOrDefault(12)?.Trim(), out decimal kst019Val) ? Math.Round(kst019Val / 1000, 2) : 0m,
+                //Depreciation = decimal.TryParse(cols.ElementAtOrDefault(13)?.Trim(), out decimal kst006Val) ? (kst006Val / 1000m) : 0m,
+                //Tariffs = decimal.TryParse(cols.ElementAtOrDefault(14)?.Trim(), out decimal kst033Val) ? (kst033Val / 1000m) : 0m,
+                //PricePer = decimal.TryParse(cols.ElementAtOrDefault(15)?.Trim(), out decimal losgrVal) ? (losgrVal) : 0m,
+                Unit = cols.ElementAtOrDefault(16)?.Trim() ?? "",
+                //FEH_STA = cols.ElementAtOrDefault(17)?.Trim() ?? "",
+                //WERK = cols.ElementAtOrDefault(18)?.Trim() ?? "",
+                //VALID_FROM = cols.ElementAtOrDefault(19)?.Trim() ?? "",
+                //VALID_TO = cols.ElementAtOrDefault(20)?.Trim() ?? "",
+                //OH_PCT = cols.ElementAtOrDefault(21)?.Trim() ?? "",
+                //IC_MARK_UP = cols.ElementAtOrDefault(22)?.Trim() ?? ""
+                Packaging = 0,
+                ExtrusionLabour = 0
+            };
+
+                foreach (var name in materialFilters)
+                {
+                    if (name[0].Trim() == record.Material.Trim())
+                    {
+                        record.Customs = name[2] switch
+                        {
+                            "EXW" => 0,
+                            "FCA" => 25,
+                            "DAP" => 25,
+                            "DDP" => 80,
+                            _ => 0
+                        };
+                        record.Packaging = CalculatePackagingCost(name[0], int.TryParse(name[1], out int packVal) ? packVal : 0);
+                        record.OutboundFreight = CalculateOutboundFreight(name[0], int.TryParse(name[1], out int packVal2) ? packVal2 : 0, name[2], name[3]);
+                    }        
+                }
+
+
+            record.Total = /*record.PricePer == 0
+                ? 0
+                :*/ Math.Round(
+                      ( record.DirectMaterial
+                      + record.DirectLabour
+                      + record.VariableProductionCost
+                      + record.InboundFreight
+                      + record.OutboundFreight
+                      + record.Scrap
+                      + record.Packaging
+                      + record.Customs
+                      ) /*/ record.PricePer*/, 2);
+
+            result.Add(record);
+        }
+
+        return result;
+    }
+
+    public decimal CalculatePackagingCost(string matnr, int volume)
+    {
+        decimal packagingCost;
+        packagingCost = 0;
+                
+        return packagingCost;
+    }
+
+    public decimal CalculateOutboundFreight(string matnr, int volume, string inco, string country)
+    {
+        decimal freightCost;
+        freightCost = 0;
+
+        string tmpText;
+
+        tmpText = inco + " " + country;
+
+        return freightCost;
+    }
+
+    /* OBSOLETE Async Thread
+    public Task<List<TableCOST>> CostSheetAsync(CancellationToken cancellationToken, string[][] materialFilters)
+    {
+        var tcs = new TaskCompletionSource<List<TableCOST>>();
+
+        Thread thread = new Thread(() =>
+        {
+            try
+            {
+                // Check cancellation before starting
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    tcs.SetCanceled();
+                    return;
+                }
+
+                var rows = CostSheet(materialFilters); // your STA-bound SAP call
+
+                // Check cancellation after call (won't actually stop SAP COM call mid-flight)
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    tcs.SetCanceled();
+                    return;
+                }
+
+                tcs.SetResult(rows);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.IsBackground = true;
+        thread.Start();
+
+        return tcs.Task;
+    }
+    */
+
+    public Task<List<TableCOST>> CostSheetAsync(string[][] materialFilters)
+    {
+        return App.SapWorker.InvokeAsync(sap =>
+        {
+            return CostSheet(materialFilters, sap);
+        });
+    }
+
+    public string SapN2C(string value, int columnLength)
+    {
+        string material = value.Trim() ?? "";
+
+        // Check if numeric
+        if (long.TryParse(material, out long numericValue))
+        {
+            // Pad with leading zeros to length 18
+            string padded = numericValue.ToString().PadLeft(columnLength, '0');
+            return padded;
+        }
+        else
+        {
+            // Not numeric – leave as-is or show a message
+            return material;
+        }
+
+    }
+
+    public string GetStartOfCurrentMonth()
+    {
+        var now = DateTime.Now;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+
+        return startOfMonth.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+    }
+
+    public string GetEndOfCurrentMonth()
+    {
+        var now = DateTime.Now;
+        var endOfMonth = new DateTime(now.Year, now.Month, 1)
+            .AddMonths(1)
+            .AddDays(-1);
+
+        return endOfMonth.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+    }
+
+
+    /* function trying to recreate SAP function when com error encountered.. not needed anymore
+    public static Task<SAPFunctions> RecreateSapFunctionsAsync()
+    {
+        return SapWorker.InvokeAsync(sap =>
+        {
+            try
+            {
+                if (sap != null)
+                {
+                    Marshal.FinalReleaseComObject(sap);
+                    sap = null;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            sap = new SAPFunctions();
+            //return sap;
+        });
+    }
+    */
+
+    public class TOCreateResult
+    {
+        public string? TransferOrderNumber { get; set; }
+        public string? Message { get; set; }
+        public string? Error { get; set; }
+        public bool Success => string.IsNullOrEmpty(Error);
+    }
+
+}
+
+
+
+
+public sealed class SapWorker : IDisposable
+{
+    private readonly BlockingCollection<Action> _queue = new();
+    private Thread _thread;
+
+    private SAPFunctions? _sapFuncs;
+
+    public SapWorker()
+    {
+        _thread = new Thread(Run)
+        {
+            IsBackground = true
+        };
+        _thread.SetApartmentState(ApartmentState.STA);
+        _thread.Start();
+    }
+
+    private void Run()
+    {
+        //  COM created on THIS thread
+        _sapFuncs = new SAPFunctions();
+
+        foreach (var action in _queue.GetConsumingEnumerable())
+        {
+            action();
+        }
+    }
+
+    public Task<T> InvokeAsync<T>(Func<SAPFunctions, T> func)
+    {
+        var tcs = new TaskCompletionSource<T>();
+
+        _queue.Add(() =>
+        {
+            try
+            {
+                var result = func(_sapFuncs);
+                tcs.SetResult(result);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+
+        return tcs.Task;
+    }
+
+    public void Dispose()
+    {
+        _queue.CompleteAdding();
+        _thread.Join();
+        Marshal.FinalReleaseComObject(_sapFuncs);
+    }
+}

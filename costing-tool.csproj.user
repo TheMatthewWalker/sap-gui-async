@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
+    <AppxShowAllApps>False</AppxShowAllApps>
+    <AppxBuildConfigurationSelection>x86</AppxBuildConfigurationSelection>
+    <PackageOptionalProjectsInIdeBuilds>False</PackageOptionalProjectsInIdeBuilds>
+    <_LastSelectedProfileId>C:\Development\sap-gui\Properties\PublishProfiles\win-x86.pubxml</_LastSelectedProfileId>
+    <Source>C:\Development\costing-tool\Assets\logo.scale-100.png</Source>
+    <SmallTileSource>C:\Development\costing-tool\Assets\logo.scale-100.png</SmallTileSource>
+    <MediumTileSource>C:\Development\costing-tool\Assets\logo.scale-100.png</MediumTileSource>
+    <WideTileSource>C:\Development\costing-tool\Assets\logo.scale-100.png</WideTileSource>
+    <LargeTileSource>C:\Development\costing-tool\Assets\logo.scale-100.png</LargeTileSource>
+    <AppIconSource>C:\Development\costing-tool\Assets\logo.scale-100.png</AppIconSource>
+    <SplashScreenSource>C:\Development\costing-tool\Assets\logo.scale-100.png</SplashScreenSource>
+    <BadgeLogoSource>C:\Development\costing-tool\Assets\logo.scale-100.png</BadgeLogoSource>
+    <PackageLogoSource>C:\Development\costing-tool\Assets\logo.scale-100.png</PackageLogoSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="App.xaml">
+      <SubType>Designer</SubType>
+    </None>
+    <None Update="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </None>
+    <None Update="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+</Project>

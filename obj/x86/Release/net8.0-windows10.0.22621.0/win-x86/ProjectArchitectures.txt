@@ -1,0 +1,1 @@
+C:\Development\costing-tool\costing-tool.csproj;x86

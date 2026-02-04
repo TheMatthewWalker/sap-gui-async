@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "costing-tool (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "costing-tool (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
