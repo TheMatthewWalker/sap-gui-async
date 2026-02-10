@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page x:Class="costing_tool.pages.CostBreakdownPage" 
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+      xmlns:local="using:costing_tool.pages" 
+      xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls" 
+      Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    
+    <Grid RowDefinitions="Auto,*" Padding="24">
+        
+        <!-- HEADER -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+            <Button Content="← Back" Click="Back_Click" Style="{StaticResource AccentButtonStyle}" Width="120" />
+            <TextBlock Text="Material Costing" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+        
+        <!-- MAIN CONTENT -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="20" Padding="8">
+                
+                
+                <!-- SAP RESULT MESSAGE -->
+                <Border Background="#FFF5F5F5" CornerRadius="8" Padding="12" BorderBrush="#FFCCCCCC" BorderThickness="1">
+                    <toolkit:DataGrid x:Name="SapDataGrid" 
+                                      AutoGenerateColumns="True" 
+                                      HeadersVisibility="Column" 
+                                      IsReadOnly="True" 
+                                      GridLinesVisibility="Horizontal" 
+                                      CanUserSortColumns="True" 
+                                      Height="400">
+                        <!-- RightTapped="SapDataGrid_RightTapped"> -->
+                        
+                        <!--    Right click menu to be developed later
+                        <toolkit:DataGrid.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="View Cost Breakdown" Icon="View" Click="ViewCost_Click"/>
+                            </MenuFlyout>
+                        </toolkit:DataGrid.ContextFlyout>
+                        -->
+                        
+                    </toolkit:DataGrid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

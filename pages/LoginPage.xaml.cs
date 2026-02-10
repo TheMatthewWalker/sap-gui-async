@@ -18,9 +18,9 @@ namespace costing_tool.pages
 
         private async void Login_Click(object sender, RoutedEventArgs e)
         {
-            string user = sapUsername.Text;
-            string pass = sapPassword.Password;
-            string system = sapSystem.Text;
+            string? user = sapUsername.Text;
+            string? pass = sapPassword.Password;
+            string? system = sapSystem.Text;
 
             sapMessage.Visibility = Visibility.Collapsed;
             LoginButton.IsEnabled = false;
@@ -51,7 +51,7 @@ namespace costing_tool.pages
                         App.IsLoggedIn = true;
 
                         if (this.Parent is Frame frame)
-                            frame.Navigate(typeof(OutputPage));
+                            frame.Navigate(typeof(NavPage));
 
                         return;
                     }

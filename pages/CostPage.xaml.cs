@@ -57,7 +57,7 @@ namespace costing_tool.pages
         public string? Country { get; set; }
     }
 
-    public sealed partial class OutputPage : Page
+    public sealed partial class CostPage : Page
     {
 
         public ObservableCollection<SearchCriteriaRow> CriteriaRows { get; set; } = new();  // Define an ObservableCollection for search criteria rows
@@ -139,7 +139,7 @@ namespace costing_tool.pages
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
 
-        public OutputPage()
+        public CostPage()
         {
             this.InitializeComponent();
 
@@ -156,13 +156,22 @@ namespace costing_tool.pages
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if (!SapResultsState.HasResults)
+            if (SapResultsState.IsRunning == true)
             {
-                
+                CalcButton.IsEnabled = false;
+                ProgressBar.Visibility = Visibility.Visible;
+                StatusText.Text = "Reading SAP data...";
             }
             else
-            {
-                SapDataGrid.ItemsSource = SapResultsState.InitialCostResults;
+            { 
+                if (!SapResultsState.HasResults)
+                {
+                    
+                }
+                else
+                {
+                    SapDataGrid.ItemsSource = SapResultsState.InitialCostResults;
+                }
             }
         }
 
@@ -221,6 +230,7 @@ namespace costing_tool.pages
             CalcButton.IsEnabled = false;
             ProgressBar.Visibility = Visibility.Visible;
             StatusText.Text = "Reading SAP data...";
+            SapResultsState.IsRunning = true;
 
             SapController sap = new SapController();
 
@@ -242,6 +252,7 @@ namespace costing_tool.pages
                 SapResultsState.CostSheetResults = allRows;
                 SapResultsState.InitialCostResults = initialRows;
                 SapResultsState.LastMaterialFilters = materialFilters;
+                SapResultsState.IsRunning = false;
 
                 SapDataGrid.ItemsSource = initialRows;
                 SapDataGrid.CanUserSortColumns = true;
@@ -270,20 +281,12 @@ namespace costing_tool.pages
                 _contextRow = row;   // store the row for the context menu actions
         }
 
-        private void CreateMovement_Click(object sender, RoutedEventArgs e)
-        {
-            if (_contextRow is TableCOST row)
-            {
-                // Navigate to your warehouse movement page
-                Frame.Navigate(typeof(OutputPage), row);
-            }
-        }
-
         private void ViewCost_Click(object sender, RoutedEventArgs e)
         {
-            if (_contextRow is TableCOST row)
+            if (_contextRow is InitialCost row)
             {
-                StatusText.Text = $"Viewing cost breakdown for {row.Material}";
+                // Navigate to your cost breakdown page
+                Frame.Navigate(typeof(CostBreakdownPage), row);
             }
         }
 

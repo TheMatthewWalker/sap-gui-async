@@ -1,6 +1,8 @@
-﻿using Microsoft.UI.Xaml;
-using SAPFunctionsOCX;
-using costing_tool.pages;
+﻿using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using System;
+using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -15,7 +17,7 @@ namespace costing_tool
 
     public partial class App : Application
     {
-        private Window? _window;
+        private Window? m_window;
 
         public static SapWorker SapWorker { get; private set; }
         public static string CurrentUser { get; set; } = string.Empty;
@@ -50,8 +52,18 @@ namespace costing_tool
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
-            _window.Activate();
+            m_window = new MainWindow();
+
+            IntPtr hwnd = WindowNative.GetWindowHandle(m_window);
+            WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
+            AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+
+            if (appWindow.Presenter is OverlappedPresenter overlapped)
+            {
+                overlapped.Maximize();
+            }
+
+            m_window.Activate();
         }
     }
 }
