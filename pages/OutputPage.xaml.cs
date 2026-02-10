@@ -3,6 +3,7 @@ using CommunityToolkit.WinUI; // for AdvancedCollectionView
 using costing_tool.pages;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using SAPFunctionsOCX;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using static SapController;
 
 
 
@@ -22,12 +24,8 @@ namespace costing_tool.pages
     public class TableCOST
     {
         public string? Material { get; set; }
-        //public string WERKS { get; set; }
         public string? CostingDate { get; set; }
-        //public string BIDAT { get; set; }
         public string? ProfitCenter { get; set; }
-        //public string BUKRS { get; set; }
-        //public string PATNR { get; set; }
         public decimal DirectMaterial { get; set; }
         public decimal DirectLabour { get; set; }
         public decimal VariableProductionCost { get; set; }
@@ -38,17 +36,16 @@ namespace costing_tool.pages
         public decimal Packaging { get; set; }
         public decimal ExtrusionLabour { get; set; }
         public decimal Total { get; set; }
-        //public decimal Depreciation { get; set; }
-        //public decimal Tariffs { get; set; }
-        //public decimal PricePer { get; set; }
         public string? Unit { get; set; }
-        //public string FEH_STA { get; set; }
-        //public string WERK { get; set; }
-        //public string VALID_FROM { get; set; }
-        //public string VALID_TO { get; set; }
-        //public string OH_PCT { get; set; }
-        //public string IC_MARK_UP { get; set; }
+    }
 
+    public class InitialCost
+    {
+        public string? Material { get; set; }
+        public string? CostingDate { get; set; }
+        public string? ProfitCenter { get; set; }
+        public decimal Total { get; set; }
+        public string? Unit { get; set; }
     }
 
     public class SearchCriteriaRow
@@ -156,6 +153,19 @@ namespace costing_tool.pages
         private object? _contextRow;
         private CancellationTokenSource? _sapCts;
 
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            if (!SapResultsState.HasResults)
+            {
+                
+            }
+            else
+            {
+                SapDataGrid.ItemsSource = SapResultsState.InitialCostResults;
+            }
+        }
+
         private void AddRowButton_Click(object sender, RoutedEventArgs e)
         {
             AddRow();
@@ -207,51 +217,50 @@ namespace costing_tool.pages
         private async void Read_Table_Click(object sender, RoutedEventArgs e)
         {
 
-
-            // Disable UI
             var stopwatch = Stopwatch.StartNew();
             CalcButton.IsEnabled = false;
-            //CancelButton.Visibility = Visibility.Visible;
             ProgressBar.Visibility = Visibility.Visible;
             StatusText.Text = "Reading SAP data...";
-            //_sapCts = new CancellationTokenSource();
 
             SapController sap = new SapController();
-
 
             try
             {
                 var materialFilters = BuildMaterialArray();
-                var rows = await sap.CostSheetAsync(/*_sapCts.Token,*/ materialFilters);
+                var rows = await sap.CostSheetAsync(materialFilters);
                 stopwatch.Stop();
-                var sortedRows = rows.OrderBy(r => r.Material).ToList();
 
-                SapDataGrid.ItemsSource = sortedRows;
+                var initialRows = rows.QuickData
+                    .OrderBy(r => r.Material)
+                    .ToList();
+
+                var allRows = rows.AllData
+                    .OrderBy(r => r.Material)
+                    .ToList();
+
+                // STORE RESULTS
+                SapResultsState.CostSheetResults = allRows;
+                SapResultsState.InitialCostResults = initialRows;
+                SapResultsState.LastMaterialFilters = materialFilters;
+
+                SapDataGrid.ItemsSource = initialRows;
                 SapDataGrid.CanUserSortColumns = true;
-                StatusText.Text = $"Loaded {rows.Count} rows in {stopwatch.Elapsed.TotalSeconds:F1}s";
 
-            }
-            catch (TaskCanceledException)
-            {
-                StatusText.Text = "SAP query cancelled.";
-            }
-            catch (COMException ex)
-            {
-                StatusText.Text = $"SAP COM error (0x{ex.HResult:X}): {ex.Message}";
+                StatusText.Text =
+                    $"Loaded {initialRows.Count} rows in {stopwatch.Elapsed.TotalSeconds:F1}s";
             }
             catch (Exception ex)
             {
-                StatusText.Text = $"C# error ({ex.Message}";
+                StatusText.Text = ex.Message;
             }
             finally
             {
                 CalcButton.IsEnabled = true;
                 ProgressBar.Visibility = Visibility.Collapsed;
-                //CancelButton.Visibility = Visibility.Collapsed;
-                //_sapCts = null;
             }
         }
-        
+
+
         private void SapDataGrid_RightTapped(object sender, Microsoft.UI.Xaml.Input.RightTappedRoutedEventArgs e)
         {
             // Determine which row was clicked

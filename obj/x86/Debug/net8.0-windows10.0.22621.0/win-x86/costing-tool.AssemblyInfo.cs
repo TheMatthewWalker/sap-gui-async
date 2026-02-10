@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("costing-tool")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1bf37b8d8ed9d40f57e0c31fe20c70f50245adce")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7f6dccfd5e6fec2fa5a9122e77e1858fb10a1367")]
 [assembly: System.Reflection.AssemblyProductAttribute("costing-tool")]
 [assembly: System.Reflection.AssemblyTitleAttribute("costing-tool")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

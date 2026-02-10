@@ -186,9 +186,20 @@ public class SapController
     }
     */
 
-    public List<TableCOST> CostSheet(string[][] materialFilters, SAPFunctions sapFuncs)
+    public class CostSheetResult
     {
-        var result = new List<TableCOST>();
+        public List<TableCOST> AllData { get; set; } = new();
+        public List<InitialCost> QuickData { get; set; } = new();
+
+        // Optional extras
+        public DateTime RetrievedAt { get; set; } = DateTime.Now;
+        public int TotalRows =>
+            AllData.Count + QuickData.Count;
+    }
+
+    public CostSheetResult CostSheet(string[][] materialFilters, SAPFunctions sapFuncs)
+    {
+        var result = new CostSheetResult();
 
 
         // Initialize SAP Functions
@@ -359,42 +370,29 @@ public class SapController
             if (!(cols.ElementAtOrDefault(18)?.Trim() == "3012"))
                 continue;
 
-            var record = new TableCOST
+            var masterRecord = new TableCOST
             {
                 Material = long.TryParse(cols.ElementAtOrDefault(0)?.Trim(), out _)
                     ? cols.ElementAtOrDefault(0)?.Trim().TrimStart('0') ?? ""
                     : cols.ElementAtOrDefault(0)?.Trim() ?? "",
-                //WERKS = cols.ElementAtOrDefault(1)?.Trim() ?? "",
                 CostingDate = cols.ElementAtOrDefault(2)?.Trim() ?? "",
-                //BIDAT = cols.ElementAtOrDefault(3)?.Trim() ?? "",
                 ProfitCenter = cols.ElementAtOrDefault(4)?.Trim() ?? "",
-                //BUKRS = cols.ElementAtOrDefault(5)?.Trim() ?? "",
-                //PATNR = cols.ElementAtOrDefault(6)?.Trim() ?? "",
                 DirectMaterial = decimal.TryParse(cols.ElementAtOrDefault(7)?.Trim(), out decimal kst001Val) ? Math.Round(kst001Val / 1000,2 ) : 0m,
                 DirectLabour = decimal.TryParse(cols.ElementAtOrDefault(8)?.Trim(), out decimal kst008Val) ? Math.Round(kst008Val / 1000, 2) : 0m,
                 VariableProductionCost = decimal.TryParse(cols.ElementAtOrDefault(9)?.Trim(), out decimal kst017Val) ? Math.Round(kst017Val / 1000, 2) : 0m,
                 InboundFreight = decimal.TryParse(cols.ElementAtOrDefault(10)?.Trim(), out decimal kst002Val) ? Math.Round(kst002Val / 1000, 2) : 0m,
                 OutboundFreight = decimal.TryParse(cols.ElementAtOrDefault(11)?.Trim(), out decimal kst004Val) ? Math.Round(kst004Val / 1000, 2) : 0m,
                 Scrap = decimal.TryParse(cols.ElementAtOrDefault(12)?.Trim(), out decimal kst019Val) ? Math.Round(kst019Val / 1000, 2) : 0m,
-                //Depreciation = decimal.TryParse(cols.ElementAtOrDefault(13)?.Trim(), out decimal kst006Val) ? (kst006Val / 1000m) : 0m,
-                //Tariffs = decimal.TryParse(cols.ElementAtOrDefault(14)?.Trim(), out decimal kst033Val) ? (kst033Val / 1000m) : 0m,
-                //PricePer = decimal.TryParse(cols.ElementAtOrDefault(15)?.Trim(), out decimal losgrVal) ? (losgrVal) : 0m,
                 Unit = cols.ElementAtOrDefault(16)?.Trim() ?? "",
-                //FEH_STA = cols.ElementAtOrDefault(17)?.Trim() ?? "",
-                //WERK = cols.ElementAtOrDefault(18)?.Trim() ?? "",
-                //VALID_FROM = cols.ElementAtOrDefault(19)?.Trim() ?? "",
-                //VALID_TO = cols.ElementAtOrDefault(20)?.Trim() ?? "",
-                //OH_PCT = cols.ElementAtOrDefault(21)?.Trim() ?? "",
-                //IC_MARK_UP = cols.ElementAtOrDefault(22)?.Trim() ?? ""
                 Packaging = 0,
                 ExtrusionLabour = 0
             };
 
-                foreach (var name in materialFilters)
+            foreach (var name in materialFilters)
                 {
-                    if (name[0].Trim() == record.Material.Trim())
+                    if (name[0].Trim() == masterRecord.Material.Trim())
                     {
-                        record.Customs = name[2] switch
+                        masterRecord.Customs = name[2] switch
                         {
                             "EXW" => 0,
                             "FCA" => 25,
@@ -402,26 +400,35 @@ public class SapController
                             "DDP" => 80,
                             _ => 0
                         };
-                        record.Packaging = CalculatePackagingCost(name[0], int.TryParse(name[1], out int packVal) ? packVal : 0);
-                        record.OutboundFreight = CalculateOutboundFreight(name[0], int.TryParse(name[1], out int packVal2) ? packVal2 : 0, name[2], name[3]);
-                    }        
+                        masterRecord.Packaging = CalculatePackagingCost(name[0], int.TryParse(name[1], out int packVal) ? packVal : 0);
+                        masterRecord.OutboundFreight = CalculateOutboundFreight(name[0], int.TryParse(name[1], out int packVal2) ? packVal2 : 0, name[2], name[3]);
+                    }
                 }
 
 
-            record.Total = /*record.PricePer == 0
-                ? 0
-                :*/ Math.Round(
-                      ( record.DirectMaterial
-                      + record.DirectLabour
-                      + record.VariableProductionCost
-                      + record.InboundFreight
-                      + record.OutboundFreight
-                      + record.Scrap
-                      + record.Packaging
-                      + record.Customs
-                      ) /*/ record.PricePer*/, 2);
+            masterRecord.Total = Math.Round(
+                        masterRecord.DirectMaterial
+                      + masterRecord.DirectLabour
+                      + masterRecord.VariableProductionCost
+                      + masterRecord.InboundFreight
+                      + masterRecord.OutboundFreight
+                      + masterRecord.Scrap
+                      + masterRecord.Packaging
+                      + masterRecord.Customs
+                      , 2);
 
-            result.Add(record);
+
+            var initialRecord = new InitialCost
+            {
+                Material = masterRecord.Material,
+                CostingDate = masterRecord.CostingDate,
+                ProfitCenter = masterRecord.ProfitCenter,
+                Total = masterRecord.Total,
+                Unit = masterRecord.Unit
+            };
+
+            result.AllData.Add(masterRecord);
+            result.QuickData.Add(initialRecord);
         }
 
         return result;
@@ -488,13 +495,24 @@ public class SapController
     }
     */
 
-    public Task<List<TableCOST>> CostSheetAsync(string[][] materialFilters)
+    public Task<CostSheetResult> CostSheetAsync(string[][] materialFilters)
     {
         return App.SapWorker.InvokeAsync(sap =>
         {
             return CostSheet(materialFilters, sap);
         });
     }
+
+
+    public static class SapResultsState
+    {
+        public static List<TableCOST>? CostSheetResults { get; set; }
+        public static List<InitialCost>? InitialCostResults { get; set; }
+        public static bool HasResults =>
+            CostSheetResults != null && CostSheetResults.Count > 0;
+        public static string[][]? LastMaterialFilters { get; set; }
+    }
+
 
     public string SapN2C(string value, int columnLength)
     {

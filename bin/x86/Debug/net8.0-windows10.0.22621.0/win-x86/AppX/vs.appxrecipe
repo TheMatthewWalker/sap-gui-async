@@ -30,7 +30,7 @@
     <AppXManifest Include="C:\Development\git-projects\sap-gui-async\bin\x86\Debug\net8.0-windows10.0.22621.0\win-x86\AppxManifest.xml">
       <PackagePath>AppxManifest.xml</PackagePath>
       <ReRegisterAppIfChanged>true</ReRegisterAppIfChanged>
-      <Modified>2026-02-04T13:52:35.721</Modified>
+      <Modified>2026-02-10T13:41:30.751</Modified>
     </AppXManifest>
   </ItemGroup>
   <ItemGroup>
@@ -40,11 +40,11 @@
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Development\git-projects\sap-gui-async\obj\x86\Debug\net8.0-windows10.0.22621.0\win-x86\apphost.exe">
       <PackagePath>costing-tool.exe</PackagePath>
-      <Modified>2026-02-04T13:52:33.911</Modified>
+      <Modified>2026-02-10T13:41:29.739</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Development\git-projects\sap-gui-async\obj\x86\Debug\net8.0-windows10.0.22621.0\win-x86\costing-tool.dll">
       <PackagePath>costing-tool.dll</PackagePath>
-      <Modified>2026-02-04T13:52:33.853</Modified>
+      <Modified>2026-02-10T13:41:29.683</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Users\Matthew.walker\.nuget\packages\microsoft.netcore.app.runtime.win-x86\8.0.23\runtimes\win-x86\lib\net8.0\Microsoft.CSharp.dll">
       <PackagePath>Microsoft.CSharp.dll</PackagePath>
