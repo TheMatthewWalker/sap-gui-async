@@ -151,7 +151,6 @@ namespace costing_tool.pages
         }
 
         private object? _contextRow;
-        private CancellationTokenSource? _sapCts;
 
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -197,15 +196,6 @@ namespace costing_tool.pages
                 {
                     CriteriaRows[i].RowNumber = i + 1; // triggers PropertyChanged
                 }
-            }
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_sapCts != null)
-            {
-                _sapCts.Cancel();
-                StatusText.Text = "Cancelling SAP query...";
             }
         }
 
