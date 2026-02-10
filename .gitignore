@@ -1,0 +1,88 @@
+# ================================
+# Visual Studio / C# / .NET
+# ================================
+
+# Build outputs
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+ARM/
+ARM64/
+
+# Visual Studio temporary files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider
+.idea/
+*.DotSettings.user
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# ================================
+# Windows / OS Files
+# ================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ================================
+# NuGet Packages
+# ================================
+*.nupkg
+packages/
+project.lock.json
+*.nuget.props
+*.nuget.targets
+
+# ================================
+# WinUI 3 / UWP / MSIX / App packaging
+# ================================
+
+# XAML designer cache and temp files
+*.xaml.cs.g.cs
+*.g.i.cs
+*.g.cs
+*.xaml.designer.cs
+*.xaml.cache
+
+# Temporary app packages (from deployment)
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+AppPackages/
+
+# App manifest generated files
+Package.StoreAssociation.xml
+*.pri
+
+# Local deployment / temp files
+*.log
+*.cache
+*.bak
+AppData/
+*.pdb
+*.ilk
+*.idb
+
+# ================================
+# IDE specific (optional)
+# ================================
+.vscode/
+*.code-workspace
+
+# ================================
+# Misc
+# ================================
+*.tmp
+*.temp
