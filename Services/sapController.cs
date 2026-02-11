@@ -17,40 +17,44 @@ using System.Threading.Tasks;
 using System.Xml.XPath;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-public class SapController
+
+
+public class SapController // This class handles all SAP related functions and queries
 {
 
-    /* Moved into SAP worker
-    dynamic sapFuncs = App.SapFuncs;
-
-    public IFunction CreateFunction(string name)
+    // Classes to hold the results of the SAP queries
+    public class CostSheetResult
     {
-        IFunction func = (IFunction)sapFuncs.Add(name);
-        return func;
-    */
+        public List<TableCOST> AllData { get; set; } = new();
+        public List<InitialCost> QuickData { get; set; } = new();
 
-    /* OBSOLETE Login function
-    public bool Login(string system, string client, string systemId, string user, string password)
-    {
-        try
-        {
-            dynamic sapFuncs = App.SapFuncs;
-            dynamic conn = sapFuncs.Connection;
-
-                    conn.System = system;
-                    conn.Client = client;
-                    conn.SystemID = systemId;
-                    conn.User = user;
-                    conn.Password = password;
-                    return conn.Logon(0, true);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Login failed: {ex.Message}", ex);
-        }
+        // Optional extras
+        public DateTime RetrievedAt { get; set; } = DateTime.Now;
+        public int TotalRows =>
+            AllData.Count + QuickData.Count;
     }
-    */
+    public static class SapResultsState
+    {
+        public static List<TableCOST>? CostSheetResults { get; set; }
+        public static List<InitialCost>? InitialCostResults { get; set; }
+        public static bool IsRunning { get; set; } = false;
+        public static bool HasResults =>
+            CostSheetResults != null && CostSheetResults.Count > 0;
+        public static string[][]? LastMaterialFilters { get; set; }
+    }
+    public class TOCreateResult
+    {
+        public string? TransferOrderNumber { get; set; }
+        public string? Message { get; set; }
+        public string? Error { get; set; }
+        public bool Success => string.IsNullOrEmpty(Error);
+    }
 
+
+
+
+
+    // Function to log in to SAP system
     public Task<bool> Login(
                             string system,
                             string client,
@@ -70,8 +74,16 @@ public class SapController
         });
     }
 
-    /* function to create TO, needs updating to work on the new thread
-    public TOCreateResult CreateTransferOrder(string plant, string sloc, string warehouse, string binType, string bin, string material, string batch, float qty, string destBin, string destBinType, string category, string special, string specialNumber)
+
+    // Functions to use Warehouse transactions
+    public Task<TOCreateResult> CreateTransferOrderAsync(string plant, string sloc, string warehouse, string binType, string bin, string material, string batch, decimal qty, string destBin, string destBinType, string category, string special, string specialNumber)
+    {
+        return App.SapWorker.InvokeAsync(sap =>
+        {
+            return CreateTransferOrder(plant, sloc, warehouse, binType, bin, material, batch, qty, destBin, destBinType, category, special, specialNumber, sap);
+        });
+    }
+    public TOCreateResult CreateTransferOrder(string plant, string sloc, string warehouse, string binType, string bin, string material, string batch, decimal qty, string destBin, string destBinType, string category, string special, string specialNumber, SAPFunctions sapFuncs)
     {
         try
         {
@@ -123,7 +135,7 @@ public class SapController
             // Read return messages
             var returnTable = func.Tables.Item("RETURN");
             string messages = "";
-            string errorMsg = null;
+            string errorMsg = "";
 
             if (returnTable != null)
             {
@@ -144,11 +156,6 @@ public class SapController
             // Transfer Order number (if created)
             string toNumber = Convert.ToString(func.Imports.Item("E_TANUM").Value);
 
-            if (errorMsg == "RFC_COMMUNICATION_ERROR" || errorMsg == "INVALID_RFC_HANDLE")
-            {
-                Login("KAP", "100", "01", App.CurrentUser, App.CurrentPass);
-                errorMsg = "Connection Issue // System Re-connecting // Please Try Again";
-            }
 
             return new TOCreateResult
             {
@@ -158,45 +165,34 @@ public class SapController
             };
 
         }
-        catch (System.Runtime.InteropServices.COMException comEx)
-        {
-            // This is the error you reported
-            System.Diagnostics.Debug.WriteLine($"COMException: {comEx.Message}");
-            System.Diagnostics.Debug.WriteLine($"COMException: {comEx.ErrorCode}");
-            throw new Exception(
-                "COM failed:\n" +
-                $"Message: {comEx.Message}\n" +
-                $"Error: {comEx.ErrorCode}\n",
-                comEx
-            );
-        }
         catch (Exception ex)
         {
             string inner = ex.InnerException?.Message ?? "null";
             string trace = ex.StackTrace ?? "null";
 
-            throw new Exception(
-                "LT01 failed:\n" +
-                $"Message: {ex.Message}\n" +
-                $"Inner: {inner}\n" +
-                $"StackTrace: {trace}\n",
-                ex
-            );
+            return new TOCreateResult
+            {
+                TransferOrderNumber = "",
+                Message = "",
+                Error = inner
+            };
         }
     }
-    */
 
-    public class CostSheetResult
+
+
+
+
+
+
+    // Functions to retreieve cost sheet data
+    public Task<CostSheetResult> CostSheetAsync(string[][] materialFilters)
     {
-        public List<TableCOST> AllData { get; set; } = new();
-        public List<InitialCost> QuickData { get; set; } = new();
-
-        // Optional extras
-        public DateTime RetrievedAt { get; set; } = DateTime.Now;
-        public int TotalRows =>
-            AllData.Count + QuickData.Count;
+        return App.SapWorker.InvokeAsync(sap =>
+        {
+            return CostSheet(materialFilters, sap);
+        });
     }
-
     public CostSheetResult CostSheet(string[][] materialFilters, SAPFunctions sapFuncs)
     {
         var result = new CostSheetResult();
@@ -433,7 +429,6 @@ public class SapController
 
         return result;
     }
-
     public decimal CalculatePackagingCost(string matnr, int volume)
     {
         decimal packagingCost;
@@ -441,7 +436,6 @@ public class SapController
                 
         return packagingCost;
     }
-
     public decimal CalculateOutboundFreight(string matnr, int volume, string inco, string country)
     {
         decimal freightCost;
@@ -454,67 +448,12 @@ public class SapController
         return freightCost;
     }
 
-    /* OBSOLETE Async Thread
-    public Task<List<TableCOST>> CostSheetAsync(CancellationToken cancellationToken, string[][] materialFilters)
-    {
-        var tcs = new TaskCompletionSource<List<TableCOST>>();
-
-        Thread thread = new Thread(() =>
-        {
-            try
-            {
-                // Check cancellation before starting
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    tcs.SetCanceled();
-                    return;
-                }
-
-                var rows = CostSheet(materialFilters); // your STA-bound SAP call
-
-                // Check cancellation after call (won't actually stop SAP COM call mid-flight)
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    tcs.SetCanceled();
-                    return;
-                }
-
-                tcs.SetResult(rows);
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-            }
-        });
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.IsBackground = true;
-        thread.Start();
-
-        return tcs.Task;
-    }
-    */
-
-    public Task<CostSheetResult> CostSheetAsync(string[][] materialFilters)
-    {
-        return App.SapWorker.InvokeAsync(sap =>
-        {
-            return CostSheet(materialFilters, sap);
-        });
-    }
 
 
-    public static class SapResultsState
-    {
-        public static List<TableCOST>? CostSheetResults { get; set; }
-        public static List<InitialCost>? InitialCostResults { get; set; }
-        public static bool IsRunning { get; set; } = false;
-        public static bool HasResults =>
-            CostSheetResults != null && CostSheetResults.Count > 0;
-        public static string[][]? LastMaterialFilters { get; set; }
-    }
 
 
+
+    // Useful functions to simplify SAP data handling
     public string SapN2C(string value, int columnLength)
     {
         string material = value.Trim() ?? "";
@@ -533,7 +472,6 @@ public class SapController
         }
 
     }
-
     public string GetStartOfCurrentMonth()
     {
         var now = DateTime.Now;
@@ -541,7 +479,6 @@ public class SapController
 
         return startOfMonth.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
     }
-
     public string GetEndOfCurrentMonth()
     {
         var now = DateTime.Now;
@@ -553,47 +490,17 @@ public class SapController
     }
 
 
-    /* function trying to recreate SAP function when com error encountered.. not needed anymore
-    public static Task<SAPFunctions> RecreateSapFunctionsAsync()
-    {
-        return SapWorker.InvokeAsync(sap =>
-        {
-            try
-            {
-                if (sap != null)
-                {
-                    Marshal.FinalReleaseComObject(sap);
-                    sap = null;
-                }
-            }
-            catch
-            {
-                // ignore
-            }
 
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
 
-            sap = new SAPFunctions();
-            //return sap;
-        });
-    }
-    */
 
-    public class TOCreateResult
-    {
-        public string? TransferOrderNumber { get; set; }
-        public string? Message { get; set; }
-        public string? Error { get; set; }
-        public bool Success => string.IsNullOrEmpty(Error);
-    }
 
 }
 
 
 
 
-public sealed class SapWorker : IDisposable
+// Worker class to handle SAP functions in a separate thread
+public sealed class SapWorker  : IDisposable
 {
     private readonly BlockingCollection<Action> _queue = new();
     private Thread _thread;
