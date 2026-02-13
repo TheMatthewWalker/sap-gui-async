@@ -1,69 +1,27 @@
 using costing_tool;
 using costing_tool.pages;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using SAPFunctionsOCX;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Numerics;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.XPath;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 
-public class SapController // This class handles all SAP related functions and queries
+
+public class SapFunctions // This class handles all SAP related functions and queries
 {
-
-    // Classes to hold the results of the SAP queries
-    public class CostSheetResult
-    {
-        public List<TableCOST> AllData { get; set; } = new();
-        public List<InitialCost> QuickData { get; set; } = new();
-
-        // Optional extras
-        public DateTime RetrievedAt { get; set; } = DateTime.Now;
-        public int TotalRows =>
-            AllData.Count + QuickData.Count;
-    }
-    public static class SapResultsState
-    {
-        public static List<TableCOST>? CostSheetResults { get; set; }
-        public static List<InitialCost>? InitialCostResults { get; set; }
-        public static bool IsRunning { get; set; } = false;
-        public static bool HasResults =>
-            CostSheetResults != null && CostSheetResults.Count > 0;
-        public static string[][]? LastMaterialFilters { get; set; }
-    }
-    public class TOCreateResult
-    {
-        public string? TransferOrderNumber { get; set; }
-        public string? Message { get; set; }
-        public string? Error { get; set; }
-        public bool Success => string.IsNullOrEmpty(Error);
-    }
-
-
-
 
 
     // Function to log in to SAP system
-    public Task<bool> Login(
+    public bool Login(
                             string system,
                             string client,
                             string systemId,
                             string user,
-                            string password)
+                            string password,
+                            SAPFunctions sap)
     {
-        return App.SapWorker.InvokeAsync(sap =>
-        {
             dynamic conn = sap.Connection;
             conn.System = system;
             conn.Client = client;
@@ -71,18 +29,14 @@ public class SapController // This class handles all SAP related functions and q
             conn.User = user;
             conn.Password = password;
             return (bool)conn.Logon(0, true);
-        });
     }
+
+
+
+
 
 
     // Functions to use Warehouse transactions
-    public Task<TOCreateResult> CreateTransferOrderAsync(string plant, string sloc, string warehouse, string binType, string bin, string material, string batch, decimal qty, string destBin, string destBinType, string category, string special, string specialNumber)
-    {
-        return App.SapWorker.InvokeAsync(sap =>
-        {
-            return CreateTransferOrder(plant, sloc, warehouse, binType, bin, material, batch, qty, destBin, destBinType, category, special, specialNumber, sap);
-        });
-    }
     public TOCreateResult CreateTransferOrder(string plant, string sloc, string warehouse, string binType, string bin, string material, string batch, decimal qty, string destBin, string destBinType, string category, string special, string specialNumber, SAPFunctions sapFuncs)
     {
         try
@@ -183,16 +137,7 @@ public class SapController // This class handles all SAP related functions and q
 
 
 
-
-
     // Functions to retreieve cost sheet data
-    public Task<CostSheetResult> CostSheetAsync(string[][] materialFilters)
-    {
-        return App.SapWorker.InvokeAsync(sap =>
-        {
-            return CostSheet(materialFilters, sap);
-        });
-    }
     public CostSheetResult CostSheet(string[][] materialFilters, SAPFunctions sapFuncs)
     {
         var result = new CostSheetResult();
@@ -227,10 +172,10 @@ public class SapController // This class handles all SAP related functions and q
 
         // Set table parameters
         // ======================
-        string[] tablesToRead = new[] { 
-                                        "ZCOST_INFO3", 
+        string[] tablesToRead = new[] {
+                                        "ZCOST_INFO3",
                                         "PATN",
-                                        "ZCOST_SHEET" 
+                                        "ZCOST_SHEET"
                                       };
 
         foreach (var name in tablesToRead)
@@ -242,7 +187,7 @@ public class SapController // This class handles all SAP related functions and q
 
         // Set query fields
         // ==================
-        string[][] fieldsToRead = [ 
+        string[][] fieldsToRead = [
                                     ["ZCOST_INFO3","MATNR"],
                                     ["ZCOST_INFO3","WERKS"],
                                     ["ZCOST_INFO3","KADAT"],
@@ -265,9 +210,9 @@ public class SapController // This class handles all SAP related functions and q
                                     ["ZCOST_SHEET", "VALID_FROM"],
                                     ["ZCOST_SHEET", "VALID_TO"],
                                     ["ZCOST_SHEET", "OH_PCT"],
-                                    ["ZCOST_SHEET", "IC_MARK_UP"]   
+                                    ["ZCOST_SHEET", "IC_MARK_UP"]
                                   ];
-        
+
         foreach (var name in fieldsToRead)
         {
             var row = qf.Rows.Add();
@@ -278,9 +223,9 @@ public class SapController // This class handles all SAP related functions and q
 
         // Set join fields
         // ==================
-        string[][] joinFields = [ 
+        string[][] joinFields = [
                                     [ "ZCOST_INFO3", "PATNR", "PATN", "PATNR" ],
-                                    [ "PATN", "WERK", "ZCOST_SHEET", "WERKS" ]    
+                                    [ "PATN", "WERK", "ZCOST_SHEET", "WERKS" ]
                                 ];
 
         foreach (var name in joinFields)
@@ -295,8 +240,8 @@ public class SapController // This class handles all SAP related functions and q
 
         // Set where clause
         // ==================
-        string[][] whereFields = [  
-                                    ["ZCOST_INFO3", "WERKS", "EQ '3012'"], 
+        string[][] whereFields = [
+                                    ["ZCOST_INFO3", "WERKS", "EQ '3012'"],
                                     ["ZCOST_INFO3", "FEH_STA", "EQ 'FR'"],
                                     ["ZCOST_INFO3", "MATNR", "IN opt"],
                                     ["ZCOST_INFO3", "KADAT", "EQ '01.01.2026'"],
@@ -319,7 +264,7 @@ public class SapController // This class handles all SAP related functions and q
             row["FIELDNAME"] = "MATNR";
             row["SIGN"] = "I";
             row["OPTION"] = "";
-            row["LOW"] = SapN2C(name[0],18);
+            row["LOW"] = SapN2C(name[0], 18);
             row["HIGH"] = "";
         }
 
@@ -357,7 +302,7 @@ public class SapController // This class handles all SAP related functions and q
         foreach (var dataRow in dataTable.Rows)
         {
             header += 1;
-            if (header == 1) 
+            if (header == 1)
                 continue;
 
             string rowStr = Convert.ToString(dataRow["WA"]) ?? string.Empty;
@@ -373,7 +318,7 @@ public class SapController // This class handles all SAP related functions and q
                     : cols.ElementAtOrDefault(0)?.Trim() ?? "",
                 CostingDate = cols.ElementAtOrDefault(2)?.Trim() ?? "",
                 ProfitCenter = cols.ElementAtOrDefault(4)?.Trim() ?? "",
-                DirectMaterial = decimal.TryParse(cols.ElementAtOrDefault(7)?.Trim(), out decimal kst001Val) ? Math.Round(kst001Val / 1000,2 ) : 0m,
+                DirectMaterial = decimal.TryParse(cols.ElementAtOrDefault(7)?.Trim(), out decimal kst001Val) ? Math.Round(kst001Val / 1000, 2) : 0m,
                 DirectLabour = decimal.TryParse(cols.ElementAtOrDefault(8)?.Trim(), out decimal kst008Val) ? Math.Round(kst008Val / 1000, 2) : 0m,
                 VariableProductionCost = decimal.TryParse(cols.ElementAtOrDefault(9)?.Trim(), out decimal kst017Val) ? Math.Round(kst017Val / 1000, 2) : 0m,
                 InboundFreight = decimal.TryParse(cols.ElementAtOrDefault(10)?.Trim(), out decimal kst002Val) ? Math.Round(kst002Val / 1000, 2) : 0m,
@@ -385,21 +330,21 @@ public class SapController // This class handles all SAP related functions and q
             };
 
             foreach (var name in materialFilters)
+            {
+                if (name[0].Trim() == masterRecord.Material.Trim())
                 {
-                    if (name[0].Trim() == masterRecord.Material.Trim())
+                    masterRecord.Customs = name[2] switch
                     {
-                        masterRecord.Customs = name[2] switch
-                        {
-                            "EXW" => 0,
-                            "FCA" => 25,
-                            "DAP" => 25,
-                            "DDP" => 80,
-                            _ => 0
-                        };
-                        masterRecord.Packaging = CalculatePackagingCost(name[0], int.TryParse(name[1], out int packVal) ? packVal : 0);
-                        masterRecord.OutboundFreight = CalculateOutboundFreight(name[0], int.TryParse(name[1], out int packVal2) ? packVal2 : 0, name[2], name[3]);
-                    }
+                        "EXW" => 0,
+                        "FCA" => 25,
+                        "DAP" => 25,
+                        "DDP" => 80,
+                        _ => 0
+                    };
+                    masterRecord.Packaging = CalculatePackagingCost(name[0], int.TryParse(name[1], out int packVal) ? packVal : 0);
+                    masterRecord.OutboundFreight = CalculateOutboundFreight(name[0], int.TryParse(name[1], out int packVal2) ? packVal2 : 0, name[2], name[3]);
                 }
+            }
 
 
             masterRecord.Total = Math.Round(
@@ -433,7 +378,7 @@ public class SapController // This class handles all SAP related functions and q
     {
         decimal packagingCost;
         packagingCost = 0;
-                
+
         return packagingCost;
     }
     public decimal CalculateOutboundFreight(string matnr, int volume, string inco, string country)
@@ -493,65 +438,4 @@ public class SapController // This class handles all SAP related functions and q
 
 
 
-
-}
-
-
-
-
-// Worker class to handle SAP functions in a separate thread
-public sealed class SapWorker  : IDisposable
-{
-    private readonly BlockingCollection<Action> _queue = new();
-    private Thread _thread;
-
-    private SAPFunctions? _sapFuncs;
-
-    public SapWorker()
-    {
-        _thread = new Thread(Run)
-        {
-            IsBackground = true
-        };
-        _thread.SetApartmentState(ApartmentState.STA);
-        _thread.Start();
-    }
-
-    private void Run()
-    {
-        //  COM created on THIS thread
-        _sapFuncs = new SAPFunctions();
-
-        foreach (var action in _queue.GetConsumingEnumerable())
-        {
-            action();
-        }
-    }
-
-    public Task<T> InvokeAsync<T>(Func<SAPFunctions, T> func)
-    {
-        var tcs = new TaskCompletionSource<T>();
-
-        _queue.Add(() =>
-        {
-            try
-            {
-                var result = func(_sapFuncs);
-                tcs.SetResult(result);
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-            }
-        });
-
-        return tcs.Task;
-    }
-
-    public void Dispose()
-    {
-        _queue.CompleteAdding();
-        _thread.Join();
-        Marshal.FinalReleaseComObject(_sapFuncs);
-    }
 }
