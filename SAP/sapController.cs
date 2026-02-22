@@ -9,8 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-
-
 public class SapController // This class handles all SAP related functions and queries
 {
 
@@ -24,10 +22,34 @@ public class SapController // This class handles all SAP related functions and q
     {
         return App.SapWorker.InvokeAsync(sap =>
         {
-            return Login(system, client, systemId, user, password, sap);
+            return SapLogin(system, client, systemId, user, password, sap);
         });
     }
 
+        public bool SapLogin(
+                            string system,
+                            string client,
+                            string systemId,
+                            string user,
+                            string password,
+                            SAPFunctions sap)
+        {
+        try
+        {
+            dynamic conn = sap.Connection;
+            conn.System = system;
+            conn.Client = client;
+            conn.SystemID = systemId;
+            conn.User = user;
+            conn.Password = password;
+            return (bool)conn.Logon(0, true);
+        }
+        catch (COMException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SAP login failed (HRESULT {ex.ErrorCode}): {ex.Message}");
+            return false;
+        }
+        }
 
 
 

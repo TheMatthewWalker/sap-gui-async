@@ -6,6 +6,8 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
 
 public sealed class SapWorker : IDisposable
 {
@@ -27,7 +29,14 @@ public sealed class SapWorker : IDisposable
     private void Run()
     {
         //  COM created on THIS thread
-        _sapFuncs = new SAPFunctions();
+        try
+        {
+            _sapFuncs = new SAPFunctions();
+        }
+        catch (Exception ex)
+        {
+            Application.Current.Exit();
+        }
 
         foreach (var action in _queue.GetConsumingEnumerable())
         {

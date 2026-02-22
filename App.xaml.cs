@@ -17,7 +17,7 @@ namespace costing_tool
 
     public partial class App : Application
     {
-        private Window? m_window;
+        public static Window? m_window { get; private set; }
 
         public static SapWorker SapWorker { get; private set; }
         public static string CurrentUser { get; set; } = string.Empty;
@@ -61,11 +61,23 @@ namespace costing_tool
             if (appWindow.Presenter is OverlappedPresenter overlapped)
             {
                 overlapped.IsMaximizable = false;
+                overlapped.IsMinimizable = false;
                 overlapped.IsResizable = false;
-                appWindow.Resize(new Windows.Graphics.SizeInt32(800, 600));
+                appWindow.Resize(new Windows.Graphics.SizeInt32(800, 1000));
                 appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
-                appWindow.TitleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
-                appWindow.TitleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
+                overlapped.SetBorderAndTitleBar(false, false); // Removes border and titlebar completely
+
+                // Background colours
+                appWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+                appWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                appWindow.TitleBar.ButtonHoverBackgroundColor = Colors.Transparent;
+                appWindow.TitleBar.ButtonPressedBackgroundColor = Colors.Transparent;
+
+                // Foreground (the actual icons) - set to transparent to hide them
+                appWindow.TitleBar.ButtonForegroundColor = Colors.Transparent;
+                appWindow.TitleBar.ButtonInactiveForegroundColor = Colors.Transparent;
+                appWindow.TitleBar.ButtonHoverForegroundColor = Colors.Transparent;
+                appWindow.TitleBar.ButtonPressedForegroundColor = Colors.Transparent;
             }
 
             m_window.Activate();

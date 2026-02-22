@@ -89,7 +89,7 @@
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">False</PublishTrimmed>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <PackageCertificateThumbprint>F678D76B9353C37F9A494F3BE14BAF59EBDD6020</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>BB8FDF726F13645CEB658E9EB67AB6D6E23CC462</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
@@ -106,5 +106,6 @@
   <PropertyGroup Label="Avalonia">
     <AvaloniaXamlIlDebuggerLaunch>True</AvaloniaXamlIlDebuggerLaunch>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
+    <PackageCertificateKeyFile>costing-tool_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
 </Project>

@@ -1,10 +1,14 @@
-﻿using costing_tool.pages;
+﻿using Avalonia.Controls;
+using costing_tool.pages;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using SAPFunctionsOCX;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using WinRT.Interop;
 
 namespace costing_tool.pages
 {
@@ -25,14 +29,7 @@ namespace costing_tool.pages
             sapMessage.Visibility = Visibility.Collapsed;
             LoginButton.IsEnabled = false;
 
-            int attempts = 0;
-            const int maxAttempts = 3;
-
             var sap = new SapController();
-
-            while (attempts < maxAttempts)
-            {
-                attempts++;
 
                 try
                 {
@@ -53,6 +50,13 @@ namespace costing_tool.pages
                         if (this.Parent is Frame frame)
                             frame.Navigate(typeof(NavPage));
 
+                        var m_Window = App.m_window;
+                        IntPtr hwnd = WindowNative.GetWindowHandle(m_Window);
+                        WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
+                        AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+                        var presenter = appWindow.Presenter as OverlappedPresenter;
+                        presenter.Maximize();
+
                         return;
                     }
 
@@ -62,21 +66,15 @@ namespace costing_tool.pages
                 catch (COMException comEx)
                 {
                     sapMessage.Text =
-                        $"SAP COM error on attempt {attempts}: {comEx.Message}";
+                        $"SAP COM error : {comEx.Message}";
                     sapMessage.Visibility = Visibility.Visible;
-                    break;
                 }
                 catch (Exception ex)
                 {
                     sapMessage.Text = $"Unexpected error: {ex.Message}";
                     sapMessage.Visibility = Visibility.Visible;
-                    break;
                 }
 
-                await Task.Delay(300);
-            }
-
-            sapMessage.Text = "Unable to log on after multiple attempts.";
             sapMessage.Visibility = Visibility.Visible;
             LoginButton.IsEnabled = true;
         }

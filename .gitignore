@@ -74,6 +74,7 @@ AppData/
 *.pdb
 *.ilk
 *.idb
+*.pfx
 
 # ================================
 # IDE specific (optional)

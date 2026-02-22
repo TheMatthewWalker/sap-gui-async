@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using costing_tool.pages;
+using Microsoft.UI.Windowing;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -15,6 +16,8 @@ namespace costing_tool
         public MainWindow()
         {
             this.InitializeComponent();
+            ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
 
             // Set initial page in frame
             MainFrame.Navigate(typeof(LoginPage));

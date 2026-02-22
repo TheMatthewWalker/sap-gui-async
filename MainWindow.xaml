@@ -13,37 +13,44 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid x:Name="AppTitleBar" Height="48" VerticalAlignment="Top">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>        <!-- Title/logo area -->
-            <ColumnDefinition Width="Auto"/>     <!-- Buttons area -->
-        </Grid.ColumnDefinitions>
+    <!-- Outer grid splits window into title bar row and content row -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <!-- Title bar -->
+            <RowDefinition Height="*"/>
+            <!-- Main content -->
+        </Grid.RowDefinitions>
 
-        <!-- Left side: logo/title -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" 
-                    VerticalAlignment="Center" Margin="16,0">
-            <TextBlock Text="Kongsberg SAP GUI" VerticalAlignment="Center"/>
-        </StackPanel>
+        <!-- Title bar -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- Right side: custom window buttons -->
-        <StackPanel Grid.Column="1" Orientation="Horizontal" 
-                    VerticalAlignment="Stretch">
+            <!-- Left: Title -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal"
+                        VerticalAlignment="Center" Margin="16,0">
+                <TextBlock Text="Kongsberg SAP GUI" VerticalAlignment="Center"/>
+            </StackPanel>
 
-            <Button x:Name="MinimiseButton" 
-                    Content="&#xE921;" 
-                    FontFamily="Segoe Fluent Icons"
-                    Click="MinimiseButton_Click"
-                    Width="46" Height="48"
-                    Background="Transparent"
-                    BorderThickness="0"/>
+            <!-- Right: Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal"
+                        VerticalAlignment="Stretch">
+                <Button x:Name="MinimiseButton"
+                        Content="&#xE921;"
+                        Style="{StaticResource MinimizeButtonStyle}"
+                        Click="MinimiseButton_Click"/>
+                <Button x:Name="CloseButton"
+                        Content="&#xE8BB;"
+                        Style="{StaticResource CloseButtonStyle}"
+                        Click="CloseButton_Click"/>
+            </StackPanel>
+        </Grid>
 
-            <Button x:Name="CloseButton" 
-                    Content="&#xE8BB;" 
-                    Style="{StaticResource CloseButtonStyle}"
-                    Click="CloseButton_Click"/>
-        </StackPanel>
+        <!-- Main content area -->
+        <Frame x:Name="MainFrame" Grid.Row="1"/>
+
     </Grid>
-
-
-    <Frame x:Name="MainFrame"/>
 </Window>

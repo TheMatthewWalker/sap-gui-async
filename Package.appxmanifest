@@ -9,7 +9,7 @@
 
   <Identity
     Name="c8b9992f-eec9-49f2-8716-845dd55e80da"
-    Publisher="CN=matthew.walker"
+    Publisher="CN=Matthew Walker"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="c8b9992f-eec9-49f2-8716-845dd55e80da" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
