@@ -60,7 +60,12 @@ namespace costing_tool
 
             if (appWindow.Presenter is OverlappedPresenter overlapped)
             {
-                overlapped.Maximize();
+                overlapped.IsMaximizable = false;
+                overlapped.IsResizable = false;
+                appWindow.Resize(new Windows.Graphics.SizeInt32(800, 600));
+                appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+                appWindow.TitleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
+                appWindow.TitleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
             }
 
             m_window.Activate();

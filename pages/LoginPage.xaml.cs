@@ -36,7 +36,7 @@ namespace costing_tool.pages
 
                 try
                 {
-                    bool connected = await sap.Login(
+                    bool connected = await sap.LoginAsync(
                         system: system,
                         client: "100",
                         systemId: "01",

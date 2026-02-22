@@ -19,5 +19,16 @@ namespace costing_tool
             // Set initial page in frame
             MainFrame.Navigate(typeof(LoginPage));
         }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Exit();
+        }
+
+        private void MinimiseButton_Click(object sender, RoutedEventArgs e)
+        {
+            var presenter = AppWindow.Presenter as OverlappedPresenter;
+            presenter?.Minimize();
+        }
     }
 }
