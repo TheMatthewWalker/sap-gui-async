@@ -1,4 +1,5 @@
-﻿using Microsoft.UI;
+﻿using Velopack;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using System;

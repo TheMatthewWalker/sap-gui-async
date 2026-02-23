@@ -16,6 +16,7 @@
     <PreferredUILang>en-US</PreferredUILang>
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release</Configurations>
+	<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,7 +57,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.8" />
     <PackageReference Include="CommunityToolkit.WinUI.Extensions" Version="8.2.250402" />
     <PackageReference Include="CommunityToolkit.WinUI.Media" Version="8.2.250402" />
 	  <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.250402" />
@@ -64,6 +64,7 @@
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6901" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
+    <PackageReference Include="Velopack" Version="0.0.1298" />
   </ItemGroup>
 
   <ItemGroup>
@@ -103,9 +104,4 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup Label="Avalonia">
-    <AvaloniaXamlIlDebuggerLaunch>True</AvaloniaXamlIlDebuggerLaunch>
-    <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
-    <PackageCertificateKeyFile>costing-tool_TemporaryKey.pfx</PackageCertificateKeyFile>
-  </PropertyGroup>
 </Project>

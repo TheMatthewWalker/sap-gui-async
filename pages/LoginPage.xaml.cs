@@ -5,10 +5,11 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using SAPFunctionsOCX;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Velopack;
 using WinRT.Interop;
-using System.Diagnostics;
 
 namespace costing_tool.pages
 {
@@ -43,6 +44,10 @@ namespace costing_tool.pages
 
                     if (connected)
                     {
+
+                        // Check for updates after login, non-blocking
+                        _ = CheckForUpdatesAsync();
+
                         App.CurrentUser = user;
                         App.CurrentPass = pass;
                         App.IsLoggedIn = true;
@@ -96,6 +101,40 @@ namespace costing_tool.pages
         {
             sapMessage.Message = message;
             sapMessage.IsOpen = true;
+        }
+
+
+        private async Task CheckForUpdatesAsync()
+        {
+            try
+            {
+                var updateManager = new UpdateManager(
+                    new Velopack.Sources.SimpleFileSource(@"\\your-server\CostingTool\releases")
+                );
+
+                var updateInfo = await updateManager.CheckForUpdatesAsync();
+                if (updateInfo == null) return;
+
+                var dialog = new ContentDialog
+                {
+                    Title = "Update Available",
+                    Content = $"Version {updateInfo.TargetFullRelease.Version} is available. Update now?",
+                    PrimaryButtonText = "Update Now",
+                    SecondaryButtonText = "Later",
+                    XamlRoot = this.XamlRoot
+                };
+
+                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                {
+                    await updateManager.DownloadUpdatesAsync(updateInfo);
+                    updateManager.ApplyUpdatesAndRestart(updateInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Update check failed: {ex.Message}");
+                // Silently fail - don't block the user if update server is unreachable
+            }
         }
 
     }
