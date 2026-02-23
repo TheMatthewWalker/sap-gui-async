@@ -17,7 +17,7 @@ namespace costing_tool
         {
             this.InitializeComponent();
             ExtendsContentIntoTitleBar = true;
-            SetTitleBar(AppTitleBar);
+            //SetTitleBar(AppTitleBar);
 
             // Set initial page in frame
             MainFrame.Navigate(typeof(LoginPage));

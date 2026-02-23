@@ -49,6 +49,11 @@ public class SapController // This class handles all SAP related functions and q
             System.Diagnostics.Debug.WriteLine($"SAP login failed (HRESULT {ex.ErrorCode}): {ex.Message}");
             return false;
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SAP login failed (Error: {ex.Message}");
+            return false;
+        }
         }
 
 

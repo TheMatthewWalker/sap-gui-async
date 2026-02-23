@@ -63,21 +63,21 @@ namespace costing_tool
                 overlapped.IsMaximizable = false;
                 overlapped.IsMinimizable = false;
                 overlapped.IsResizable = false;
-                appWindow.Resize(new Windows.Graphics.SizeInt32(800, 1000));
+                appWindow.Resize(new Windows.Graphics.SizeInt32(800, 900));
                 appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
-                overlapped.SetBorderAndTitleBar(false, false); // Removes border and titlebar completely
+                //overlapped.SetBorderAndTitleBar(false, false); // Removes border and titlebar completely
 
                 // Background colours
-                appWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
-                appWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-                appWindow.TitleBar.ButtonHoverBackgroundColor = Colors.Transparent;
-                appWindow.TitleBar.ButtonPressedBackgroundColor = Colors.Transparent;
+                //appWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+                //appWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                //appWindow.TitleBar.ButtonHoverBackgroundColor = Colors.Transparent;
+                //appWindow.TitleBar.ButtonPressedBackgroundColor = Colors.Transparent;
 
                 // Foreground (the actual icons) - set to transparent to hide them
-                appWindow.TitleBar.ButtonForegroundColor = Colors.Transparent;
-                appWindow.TitleBar.ButtonInactiveForegroundColor = Colors.Transparent;
-                appWindow.TitleBar.ButtonHoverForegroundColor = Colors.Transparent;
-                appWindow.TitleBar.ButtonPressedForegroundColor = Colors.Transparent;
+                appWindow.TitleBar.ButtonForegroundColor = Colors.Black;
+                //appWindow.TitleBar.ButtonInactiveForegroundColor = Colors.Transparent;
+                //appWindow.TitleBar.ButtonHoverForegroundColor = Colors.Transparent;
+                //appWindow.TitleBar.ButtonPressedForegroundColor = Colors.Transparent;
             }
 
             m_window.Activate();

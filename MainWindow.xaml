@@ -22,20 +22,20 @@
             <!-- Main content -->
         </Grid.RowDefinitions>
 
-        <!-- Title bar -->
+        <!-- Title bar 
         <Grid x:Name="AppTitleBar" Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left: Title -->
+             Left: Title
             <StackPanel Grid.Column="0" Orientation="Horizontal"
                         VerticalAlignment="Center" Margin="16,0">
-                <TextBlock Text="Kongsberg SAP GUI" VerticalAlignment="Center"/>
+                <TextBlock Text="" VerticalAlignment="Center"/>
             </StackPanel>
 
-            <!-- Right: Buttons -->
+             Right: Buttons
             <StackPanel Grid.Column="1" Orientation="Horizontal"
                         VerticalAlignment="Stretch">
                 <Button x:Name="MinimiseButton"
@@ -47,9 +47,9 @@
                         Style="{StaticResource CloseButtonStyle}"
                         Click="CloseButton_Click"/>
             </StackPanel>
-        </Grid>
+    </Grid> -->
 
-        <!-- Main content area -->
+    <!-- Main content area -->
         <Frame x:Name="MainFrame" Grid.Row="1"/>
 
     </Grid>
