@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using costing_tool.Models;
 
 
 public class SapController // This class handles all SAP related functions and queries

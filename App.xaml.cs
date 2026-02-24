@@ -1,8 +1,9 @@
-﻿using Velopack;
-using Microsoft.UI;
+﻿using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using costing_tool.Services;
 using System;
+using Velopack;
 using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -19,7 +20,7 @@ namespace costing_tool
     public partial class App : Application
     {
         public static Window? m_window { get; private set; }
-
+        public static MixingService MixingService { get; private set; }
         public static SapWorker SapWorker { get; private set; }
         public static string CurrentUser { get; set; } = string.Empty;
         public static bool IsLoggedIn { get; set; } = false;
@@ -54,6 +55,9 @@ namespace costing_tool
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             m_window = new MainWindow();
+
+            var config = AppConfig.Load();
+            MixingService = new MixingService(config.ApiBaseUrl, config.ApiKey);
 
             IntPtr hwnd = WindowNative.GetWindowHandle(m_window);
             WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);

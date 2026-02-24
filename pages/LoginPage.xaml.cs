@@ -7,6 +7,7 @@ using SAPFunctionsOCX;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
 using WinRT.Interop;
@@ -60,9 +61,11 @@ namespace costing_tool.pages
                         WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
                         AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
                         var presenter = appWindow.Presenter as OverlappedPresenter;
+                        appWindow.Resize(new Windows.Graphics.SizeInt32(1400, 1000));
                         presenter.Maximize();
+                        presenter.IsMaximizable = true;
 
-                        return;
+                    return;
                     }
                     else
                     {
@@ -109,7 +112,9 @@ namespace costing_tool.pages
             try
             {
                 var updateManager = new UpdateManager(
-                    new Velopack.Sources.SimpleFileSource(@"\\your-server\CostingTool\releases")
+                    new Velopack.Sources.SimpleFileSource(
+                        new System.IO.DirectoryInfo(@"\\J:\Common\Logistics\_sap_gui")
+                    )
                 );
 
                 var updateInfo = await updateManager.CheckForUpdatesAsync();

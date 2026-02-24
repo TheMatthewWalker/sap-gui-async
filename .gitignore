@@ -87,3 +87,4 @@ AppData/
 # ================================
 *.tmp
 *.temp
+appsettings.json

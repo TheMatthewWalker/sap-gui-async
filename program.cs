@@ -12,16 +12,7 @@ namespace costing_tool
         static void Main(string[] args)
         {
             // Velopack MUST run before anything else
-            VelopackApp.Build()
-                .WithFirstRun(v =>
-                {
-                    // Runs once after first install - useful for shortcuts etc.
-                })
-                .WithAfterUpdateFastCallback(v =>
-                {
-                    // Runs after an update is applied
-                })
-                .Run();
+            VelopackApp.Build().Run();
 
             // Standard WinUI 3 startup continues as normal
             WinRT.ComWrappersSupport.InitializeComWrappers();

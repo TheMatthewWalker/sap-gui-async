@@ -35,6 +35,10 @@ public sealed partial class NavPage : Page
                 Frame.Navigate(typeof(CostPage));
                 break;
 
+            case "Production":
+                Frame.Navigate(typeof(MixingPage));
+                break;
+
             default:
                 // If needed: log unknown tile
                 break;
