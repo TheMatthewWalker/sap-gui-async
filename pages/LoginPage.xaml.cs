@@ -5,7 +5,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using SAPFunctionsOCX;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,10 +18,12 @@ namespace costing_tool.pages
 {
     public sealed partial class LoginPage : Page
     {
-
+        public List<string> SapSystems { get; }
         public LoginPage()
         {
             this.InitializeComponent();
+
+            SapSystems = App.Config.SapSystems;
         }
 
         private async void Login_Click(object sender, RoutedEventArgs e)
@@ -56,7 +60,7 @@ namespace costing_tool.pages
                         if (this.Parent is Frame frame)
                             frame.Navigate(typeof(NavPage));
 
-                        var m_Window = App.m_window;
+                        var m_Window = App.MainWindow;
                         IntPtr hwnd = WindowNative.GetWindowHandle(m_Window);
                         WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
                         AppWindow appWindow = AppWindow.GetFromWindowId(windowId);

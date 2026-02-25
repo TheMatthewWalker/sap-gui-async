@@ -17,9 +17,14 @@ namespace costing_tool.pages
     {
         public ObservableCollection<MixingCriteria> MixingCriteria { get; set; } = new();  // Define an ObservableCollection for search criteria
 
+        // Hardcoded shift options
+        public List<string> ShiftOptions { get; }
+
         public MixingPage()
         {
             this.InitializeComponent();
+
+            ShiftOptions = App.Config.ShiftOptions;
 
             // Add one initial row
             AddRow();
@@ -121,8 +126,25 @@ namespace costing_tool.pages
         {
             if (_contextRow is Mixing row)
             {
-                // Navigate to your cost breakdown page
-                //Frame.Navigate(typeof(CostBreakdownPage), row);
+                // Print paperwork
+            }
+        }
+
+        private void View_Details_Click(object sender, RoutedEventArgs e)
+        {
+            if (_contextRow is Mixing row)
+            {
+                // Navigate to your mixing breakdown page
+                //Frame.Navigate(typeof(MixingViewPage), row);
+            }
+        }
+
+        private void Edit_Details_Click(object sender, RoutedEventArgs e)
+        {
+            if (_contextRow is Mixing row)
+            {
+                // Navigate to your mixing breakdown page
+                //Frame.Navigate(typeof(MixingEditPage), row);
             }
         }
 

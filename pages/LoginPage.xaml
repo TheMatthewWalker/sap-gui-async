@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="costing_tool.pages.LoginPage"
+    x:Name="PageRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:services="using:costing_tool.Services">
 
     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
 
@@ -29,13 +31,25 @@
                    Margin="0,0,0,10"
                    FontStyle="Oblique"
                    />
-         
+        <!--
         <TextBox x:Name="sapSystem"
                  PlaceholderText="SAP System"
                  FontSize="18"
                  Width="250"
                  Margin="0,0,0,10"
                  HorizontalAlignment="Center"/>
+        -->
+
+        <ComboBox x:Name="sapSystem"
+                  FontSize="18"
+                  Width="250"
+                  Margin="0,0,0,10"
+                  ItemsSource="{Binding SapSystems, ElementName=PageRoot}"
+                  HorizontalAlignment="Center"
+                  PlaceholderText="SAP System">
+        </ComboBox>
+
+
         <TextBox x:Name="sapUsername"
                  PlaceholderText="SAP Username"
                  FontSize="18"

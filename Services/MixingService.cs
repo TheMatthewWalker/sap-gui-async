@@ -85,7 +85,6 @@ namespace costing_tool.Services
         // ── Dynamic filtered search ──
         public async Task<List<Mixing>> SearchAsync(IEnumerable<MixingCriteria> searchRows)
         {
-            // Only send rows that have at least one field filled in
             var activeRows = searchRows
                 .Where(r => !string.IsNullOrWhiteSpace(r.MixingID) ||
                             !string.IsNullOrWhiteSpace(r.MixCode) ||
@@ -94,9 +93,24 @@ namespace costing_tool.Services
                             !string.IsNullOrWhiteSpace(r.Operator) ||
                             !string.IsNullOrWhiteSpace(r.SupplierBatch) ||
                             !string.IsNullOrWhiteSpace(r.BatchTub) ||
-                            !string.IsNullOrWhiteSpace(r.CreationDate) ||
+                            r.CreationDate.HasValue ||
+                            r.DateTo.HasValue ||
                             !string.IsNullOrWhiteSpace(r.CreationTime) ||
                             !string.IsNullOrWhiteSpace(r.Comment))
+                .Select(r => new MixingSearchDto
+                {
+                    mixingID = r.MixingID,
+                    mixCode = r.MixCode,
+                    totalWeight = r.TotalWeight,
+                    shift = r.Shift,
+                    @operator = r.Operator,
+                    supplierBatch = r.SupplierBatch,
+                    batchTub = r.BatchTub,
+                    creationDate = r.CreationDateFormatted,  // Converts DateTimeOffset → dd.MM.yyyy
+                    dateTo = r.DateToFormatted,        // Converts DateTimeOffset → dd.MM.yyyy
+                    creationTime = r.CreationTime,
+                    comment = r.Comment
+                })
                 .ToList();
 
             var response = await _client.PostAsJsonAsync($"{_baseUrl}/api/mixing/search", activeRows);

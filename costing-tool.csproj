@@ -73,6 +73,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="libs\SAPFunctionsOCX.Interop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="libs\wdtfuncs.ocx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="pages\InputPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>

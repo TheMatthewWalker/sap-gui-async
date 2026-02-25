@@ -1,11 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Page x:Class="costing_tool.pages.MixingPage" 
+      x:Name="PageRoot"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
       xmlns:local="using:costing_tool.pages" 
 	  xmlns:models="using:costing_tool.Models"
+      xmlns:services="using:costing_tool.Services"
+      xmlns:converters="using:costing_tool.Converters"
       xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls" 
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <converters:NullOrEmptyStringConverter x:Key="NullOrEmptyStringConverter"/>
+    </Page.Resources>
+
 
     <Grid RowDefinitions="Auto,*" Padding="24">
 
@@ -49,17 +57,27 @@
                                         <TextBlock Grid.Column="0" Text="{Binding  RowNumber, Mode=OneWay}" VerticalAlignment="Center" FontWeight="Bold"/>
 
 										<!-- Inputs -->
-										<TextBox Grid.Column="1"  Text="{Binding MixingID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"      PlaceholderText="MixingID"/>
-										<TextBox Grid.Column="2"  Text="{Binding MixCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"        PlaceholderText="MixCode"/>
-										<TextBox Grid.Column="3"  Text="{Binding TotalWeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"    PlaceholderText="TotalWeight"/>
-										<TextBox Grid.Column="4"  Text="{Binding Shift, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"          PlaceholderText="Shift"/>
-										<TextBox Grid.Column="5"  Text="{Binding Operator, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"       PlaceholderText="Operator"/>
-										<TextBox Grid.Column="6"  Text="{Binding SupplierBatch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  PlaceholderText="SupplierBatch"/>
-										<TextBox Grid.Column="7"  Text="{Binding BatchTub, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"       PlaceholderText="BatchTub"/>
-										<TextBox Grid.Column="8"  Text="{Binding CreationDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"   PlaceholderText="Date From (dd.mm.yyyy)"/>
-										<TextBox Grid.Column="9"  Text="{Binding DateTo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"         PlaceholderText="Date To (dd.mm.yyyy)"/>
-										<TextBox Grid.Column="10" Text="{Binding CreationTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"   PlaceholderText="CreationTime"/>
-										<TextBox Grid.Column="11" Text="{Binding Comment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"        PlaceholderText="Comment"/>
+										<TextBox Grid.Column="1"  Text="{Binding MixingID, Mode=TwoWay}"      PlaceholderText="MixingID"/>
+										<TextBox Grid.Column="2"  Text="{Binding MixCode, Mode=TwoWay}"        PlaceholderText="MixCode"/>
+										<TextBox Grid.Column="3"  Text="{Binding TotalWeight, Mode=TwoWay}"    PlaceholderText="TotalWeight"/>
+                                        <ComboBox Grid.Column="4"
+                                                  ItemsSource="{Binding ShiftOptions, ElementName=PageRoot}"
+                                                  SelectedItem="{Binding Shift, Mode=TwoWay}"
+                                                  HorizontalAlignment="Stretch"
+                                                  PlaceholderText="Shift">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate x:DataType="x:String">
+                                                    <TextBlock Text="{Binding Converter={StaticResource NullOrEmptyStringConverter}}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBox Grid.Column="5"  Text="{Binding Operator, Mode=TwoWay}"       PlaceholderText="Operator"/>
+										<TextBox Grid.Column="6"  Text="{Binding SupplierBatch, Mode=TwoWay}"  PlaceholderText="SupplierBatch"/>
+										<TextBox Grid.Column="7"  Text="{Binding BatchTub, Mode=TwoWay}"       PlaceholderText="BatchTub"/>
+                                        <DatePicker Grid.Column="8"   Date="{Binding CreationDate, Mode=TwoWay}" Header="Date From" HorizontalAlignment="Stretch"/>
+                                        <DatePicker Grid.Column="9"  Date="{Binding DateTo, Mode=TwoWay}" Header="Date To" HorizontalAlignment="Stretch"/>
+										<TextBox Grid.Column="10" Text="{Binding CreationTime, Mode=TwoWay}"   PlaceholderText="CreationTime"/>
+										<TextBox Grid.Column="11" Text="{Binding Comment, Mode=TwoWay}"        PlaceholderText="Comment"/>
 
 										<!-- Delete Button -->
 										<Button Grid.Column="12" Content="🗑" Click="DeleteRowButton_Click" ToolTipService.ToolTip="Delete Row"/>
@@ -92,7 +110,9 @@
 
                         <toolkit:DataGrid.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem Text="Reprint Paperwork" Icon="Print" Click="Reprint_Click"/>
+                                <MenuFlyoutItem Text="View" Icon="View" Click="View_Details_Click"/>
+                                <MenuFlyoutItem Text="Edit" Icon="Edit" Click="Edit_Details_Click"/>
+                                <MenuFlyoutItem Text="Reprint" Icon="Print" Click="Reprint_Click"/>
                             </MenuFlyout>
                         </toolkit:DataGrid.ContextFlyout>
 
